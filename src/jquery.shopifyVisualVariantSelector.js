@@ -21,6 +21,7 @@
           productPrice: $("#productPrice"),
           productComparePrice: $("#comparePrice"),
           options: [null, null, null],
+          imageSize: "medium"
         };
 
     // The actual plugin constructor
@@ -76,7 +77,7 @@
           if (!this.defaultVariant || !this.defaultVariant.available) {
             this.defaultVariant = variant;
           }
-          this.preload(variant.image); // TODO only if foto element set
+          this.preload(variant.featured_image);
           this.renderButtons(variant);
 
           this.variants[key] = variant;
@@ -89,10 +90,13 @@
           }).join("-");
         },
 
-        preload: function(url) {
-          if (url && !this.images[url]) {
-            this.images[url] = new Image();
-            this.images[url].src = url;
+        preload: function(featured_image) {
+          if (featured_image) {
+            var src = this.imageUrl(featured_image.src);
+            if (!this.images[src]) {
+              this.images[src] = new Image();
+              this.images[src].src = src;
+            }
           }
         },
 
@@ -170,18 +174,16 @@
           productComparePrice = this.settings.productComparePrice,
           variant = this.variants[key];
 
-          console.log(variant)
-
           if (variant) {
             $(this.element).val(variant.id);
 
             if (variant.featured_image && productPhotoElement) {
-              console.log(variant.featured_image.src);
-              productPhotoElement.attr("src", variant.featured_image.src);
+              productPhotoElement.attr("src", this.imageUrl(variant.featured_image.src));
             }
+
             productElement.toggleClass("unavailable", variant.quantity < 1 && !variant.available);
             productElement.toggleClass("preorder",    variant.quantity < 1 && variant.available);
-            productElement.toggleClass("onsale",      variant.compare_at_price);
+            productElement.toggleClass("onsale",      this.onSale(variant));
             productPrice.html(variant.price);
             productComparePrice.html(variant.compare_at_price);
           }
@@ -197,12 +199,19 @@
           }).join("-");
         },
 
-        norm: function(value) {
-          return value.replace(/[ .\/]/g, "").replace(/ß/, "s").replace(/ü/, "u");
+        imageUrl: function(url) {
+          return url.replace(/\.(jpeg|png|jpg)/g, "_" + this.settings.imageSize + ".$1");
+        },
+
+        onSale: function(variant) {
+          return (variant.compare_at_price && (variant.price < variant.compare_at_price));
         },
 
         // ------------------------------------------  sort me
 
+        norm: function(value) {
+          return value.replace(/[ .\/]/g, "").replace(/ß/, "s").replace(/ü/, "u");
+        },
         // values: function(hash) {
         //   return $.map(hash, function(value, key) {
         //     return value;

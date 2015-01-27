@@ -22,7 +22,7 @@
             <div class="grid">
                <div class="grid__item large--eleven-twelfths text-center">
                   <div class="product-photo-container" id="productPhoto">
-                     <img id="productPhotoImg" src="http://cdn.shopify.com/s/files/1/0240/1531/products/Xenith_Epic_Seite_medium.jpg?v=1417799714" alt="Epic">
+                     <img id="productPhotoImg" src="http://cdn.shopify.com/s/files/1/0240/1531/products/Xenith_Epic_Seite_medium.jpg?v=1417799714" alt="Epic" height="200">
                   </div>
                </div>
             </div>
@@ -80,7 +80,7 @@
                            <option value="1039544504" data-infos='{"id":1039544504,"title":"XL / Navy-Blau","options":["XL","Navy-Blau"],"option1":"XL","option2":"Navy-Blau","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":0,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-06T12:26:38+01:00","id":1112118376,"position":8,"product_id":388595988,"updated_at":"2014-12-06T12:26:38+01:00","src":"http://cdn.shopify.com/s/files/1/0240/1531/products/Navy.jpeg?v=1417865198","variant_ids":[1039544384,1039544424,1039544464,1039544504]}}'>XL / Navy-Blau - €339,85 EUR</option>
                            <option value="1039544508" data-infos='{"id":1039544508,"title":"XL / Royal-Blau","options":["XL","Royal-Blau"],"option1":"XL","option2":"Royal-Blau","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":0,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-06T12:26:39+01:00","id":1112118396,"position":10,"product_id":388595988,"updated_at":"2014-12-06T12:26:39+01:00","src":"http://cdn.shopify.com/s/files/1/0240/1531/products/Royal.jpeg?v=1417865199","variant_ids":[1039544388,1039544428,1039544468,1039544508]}}'>XL / Royal-Blau - €339,85 EUR</option>
                            <option value="1039544516" data-infos='{"id":1039544516,"title":"XL / Grün","options":["XL","Grün"],"option1":"XL","option2":"Grün","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":0,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-06T12:39:57+01:00","id":1112125764,"position":13,"product_id":388595988,"updated_at":"2014-12-06T12:39:57+01:00","src":"http://cdn.shopify.com/s/files/1/0240/1531/products/DarkGreen.jpeg?v=1417865997","variant_ids":[1039544396,1039544436,1039544476,1039544516]}}'>XL / Grün - €339,85 EUR</option>
-                           <option value="1039544524" data-infos='{"id":1039544524,"title":"XL / Lila","options":["XL","Lila"],"option1":"XL","option2":"Lila","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":0,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-06T12:26:39+01:00","id":1112118388,"position":9,"product_id":388595988,"updated_at":"2014-12-06T12:26:39+01:00","src":"http://cdn.shopify.com/s/files/1/0240/1531/products/Purple2.jpeg?v=1417865199","variant_ids":[1039544404,1039544444,1039544484,1039544524]}}'>XL / Lila - €339,85 EUR</option>
+                           <option value="1039544524" data-infos='{"id":1039544524,"title":"XL / Lila","options":["XL","Lila"],"option1":"XL","option2":"Lila","option3":null,"price":34985,"weight":0,"compare_at_price":null,"inventory_quantity":0,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-06T12:26:39+01:00","id":1112118388,"position":9,"product_id":388595988,"updated_at":"2014-12-06T12:26:39+01:00","src":"http://cdn.shopify.com/s/files/1/0240/1531/products/Purple2.jpeg?v=1417865199","variant_ids":[1039544404,1039544444,1039544484,1039544524]}}'>XL / Lila - €349,85 EUR</option>
                         </select>
                      </li>
                   </ul>
@@ -97,7 +97,10 @@
       <script>
          $(function() {
          	$("#productSelect").shopifyVisualVariantSelector({
-               product: $("#product")
+               product: $("#product"),
+               productPhoto: $("#productPhotoImg"),
+               productPrice: $("#productPrice"),
+               productComparePrice: $("#comparePrice")
          	});
          });
       </script>
