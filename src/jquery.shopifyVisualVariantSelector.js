@@ -21,7 +21,10 @@
           productPrice: $("#productPrice"),
           productComparePrice: $("#comparePrice"),
           options: [null, null, null],
-          imageSize: "medium"
+          imageSize: "medium",
+          classOver: "over",
+          classSelected: "selected",
+          // unavailable
         };
 
     // The actual plugin constructor
@@ -57,7 +60,7 @@
           this.optionNames = selector.data("options");
 
           $.each(this.optionNames, function(index, name){
-            scope.options[index] = scope.settings.options[index] || $("<div>").attr("class", name).insertAfter(selector);
+            scope.options[index] = scope.settings.options[index] || $("<div><span>" + name + ":</span> - </label>").attr("class", name).insertAfter(selector);
           });
 
           selector.find("option").each(function(index, elem) {
@@ -116,6 +119,9 @@
 
         renderButton: function(optionKey, optionValue, display) {
           var scope = this,
+          classSelected = this.settings.classSelected,
+          classSelectedS = "." + classSelected,
+          classOver = this.settings.classOver,
           button = $("<input>")
             .attr("type", "radio")
             .attr("name", "option" + optionKey)
@@ -128,8 +134,8 @@
             .attr("title", scope.optionNames[optionKey] + ": " + display)
             .append(button, name)
             .on("click", function() {
-              $(this).not(".unavailable").not(".active").each(function() {
-                scope.toggleClassName($(this), "active")
+              $(this).not(".unavailable").not(classSelectedS).each(function() {
+                scope.toggleClassName($(this), classSelected)
                   .find("input:radio")
                     .prop("checked", true)
                     .siblings()
@@ -138,13 +144,13 @@
                 // scope.setAvailabilites();
               });
             }).on("mouseover", function() {
-              $(this).not(".unavailable").not(".active").each(function() {
-                scope.toggleClassName($(this), "over");
+              $(this).not(".unavailable").not(classSelectedS).each(function() {
+                scope.toggleClassName($(this), classOver);
                 scope.update();
               });
             }).on("mouseout", function() {
-              $(this).not(".unavailable").not(".active").each(function() {
-                $(this).removeClass("over");
+              $(this).not(".unavailable").not(classSelectedS).each(function() {
+                $(this).removeClass(classOver);
                 scope.update();
               });
             }).on("availability", function(event, available) {
@@ -154,7 +160,7 @@
                 .find("input:radio")
                   .attr("disabled", !available);
             }).on("resolveAvailabilityConflict", function() {
-              $(this).filter(".active.unavailable").each(function() {
+              $(this).filter(classSelectedS + ".unavailable").each(function() {
                 $(this)
                   .siblings().not(".unavailable").first()
                   .click();
@@ -172,7 +178,7 @@
           productPhotoElement = this.settings.productPhoto,
           productPrice        = this.settings.productPrice,
           productComparePrice = this.settings.productComparePrice,
-          variant = this.variants[key];
+          variant             = this.variants[key];
 
           if (variant) {
             $(this.element).val(variant.id);
@@ -181,6 +187,7 @@
               productPhotoElement.attr("src", this.imageUrl(variant.featured_image.src));
             }
 
+            productElement.removeClass("unkown");
             productElement.toggleClass("unavailable", variant.quantity < 1 && !variant.available);
             productElement.toggleClass("preorder",    variant.quantity < 1 && variant.available);
             productElement.toggleClass("onsale",      this.onSale(variant));
@@ -188,14 +195,17 @@
             productComparePrice.html(variant.compare_at_price);
           }
           else {
-            productElement.addClass("unavailable");
+            productElement.addClass("unkown");
           }
         },
 
         currentVariantKey: function() {
-          var scope = this;
+          var scope = this,
+          classSelected = this.settings.classSelected,
+          classSelectedS = "." + classSelected,
+          classOverS = ".over";
           return $.map(scope.options, function(option) {
-            return $(option.find("label.over input")[0] || option.find("label.active input")[0]).val();
+            return $(option.find("label" + classOverS +" input")[0] || option.find("label" + classSelectedS + " input")[0]).val();
           }).join("-");
         },
 
@@ -212,6 +222,7 @@
         norm: function(value) {
           return value.replace(/[ .\/]/g, "").replace(/ß/, "s").replace(/ü/, "u");
         },
+
         // values: function(hash) {
         //   return $.map(hash, function(value, key) {
         //     return value;
