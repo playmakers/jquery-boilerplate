@@ -56,7 +56,6 @@
           selector.find("option").each(function(index, elem) {
             var variant;
             if (variant = $(elem).data("variant")) {
-
               scope.addVariant(variant);
             }
           });
@@ -116,7 +115,7 @@
             var optionNormValue = scope.norm(optionValue);
             if (!scope.options[index].buttons[optionNormValue]) {
               var optionKey = 'group' + index,
-                button = scope.renderButton(optionKey, optionValue, optionValue);
+                button = scope.renderButton(optionKey, optionNormValue, optionValue);
               scope.options[index].buttons[optionNormValue] = button.appendTo(scope.options[index].group);
             }
           });
@@ -156,42 +155,31 @@
         },
 
 
-        currentOptionValue: function(optionKey) {
-          var elements = $('#options .' + optionKey + ' .option'),
-          element = elements.filter('.over')[0] || elements.filter('.active')[0];
-
-          return $(element).find('input').val();
-        },
-
         currentVariantKey: function() {
           var scope = this;
 
-          return $.map(scope.optionKeys(), function(optionKey) {
-            return scope.currentOptionValue(optionKey);
+          return $.map(scope.options, function(values, index) {
+
+  // currentOptionValue: function(optionKey) {
+  //         var elements = $('#options .' + optionKey + ' .option'),
+  //         element = elements.filter('.over')[0] || elements.filter('.active')[0];
+
+  //         return $(element).find('input').val();
+  //       },
+
+
+            return values.group.find(':checked').val();
           }).join('-');
         },
 
         update: function() {
-          var key = this.currentVariantKey(),
-          productElement = this.settings.product,
-          productPhotoElement = this.settings.productPhoto,
-          variant = variants[key];
-
+          var selector = $(this.element),
+          key = this.currentVariantKey(),
+          variant = this.variants[key];
           if (variant) {
-            $(this.element).val(variant.id);
-
-            if (variant.image && productPhotoElement) {
-              productPhotoElement.attr("src", variant.image);
-            }
-            productElement.toggleClass("unavailable", variant.quantity < 1 && !variant.available);
-            productElement.toggleClass("preorder",    variant.quantity < 1 && variant.available);
-            productElement.toggleClass("onsale",     variant.onSale);
-            $("#productPrice").html(variant.price);
-            $("#comparePrice").html(variant.comparePrice);
+            selector.val(variant.id);
           }
-          else {
-            productElement.addClass('unavailable');
-          }
+          selector.trigger('variantChange', variant);
         },
 
         setAvailability: function(optionKey, possibleVariants) {
@@ -223,45 +211,52 @@
 
         renderButton: function(optionKey, optionValue, display) {
           var scope = this,
-          button = $('<input type="radio" name="' + optionKey + '" value="' + optionValue +'">');
+          button = $('<input type="radio" name="' + optionKey + '" value="' + optionValue +'">')
+            .on('click', function(event) {
+              // console.log('inputclick');
+              scope.toggleClassName($(this).parent(), 'active');
+              scope.update();
+              event.stopPropagation();
+              // $(this).not('.unavailable').not('.active').each(function() {
+              //   scope.toggleClassName($(this), 'active')
+              //     .find('input:radio')
+              //       .prop('checked', true)
+              //       .siblings()
+              //       .prop('checked', false);
+              //   scope.setAvailabilites();
+              // });
+            })
+            // .on('availability', function(event, available) {
+            //   $(this)
+            //     .toggleClass('unavailable', !available)
+            //     .toggleClass('disabled', !available)
+            //     .find('input:radio')
+            //       .attr('disabled', !available);
+            // })
+            // .on('resolveAvailabilityConflict', function() {
+            //   $(this).filter('.active.unavailable').each(function() {
+            //     $(this)
+            //       .siblings().not('.unavailable').first()
+            //       .click();
+            //   });
+            // });
 
           return $('<label class="btn--secondary option optionValue' + optionValue + '">')
             .attr('title', optionKey + ': ' + display)
             .append(button, $('<span>' + display + '</span>'))
             .on('click', function(event) {
-              // $(this).not('.unavailable').not('.active').each(function() {
-                // scope.toggleClassName($(this), 'active')
-                  // .find('input:radio')
-                    // .prop('checked', true)
-                    // .siblings()
-                    // .prop('checked', false);
-                // scope.update();
-                // scope.setAvailabilites();
-              // });
-            }).on('mouseover', function() {
-              $(this).not('.unavailable').not('.active').each(function() {
-                scope.toggleClassName($(this), 'over');
-                scope.update();
-              });
+              // console.log('labelclick');
+               // scope.update();
+               // event.stopPropagation();
+               //               event.stopImmediatePropagation();
+
+            })
+            .on('mouseover', function() {
+              scope.toggleClassName($(this), 'over');
+              scope.update();
             }).on('mouseout', function() {
-              $(this).not('.unavailable').not('.active').each(function() {
-                $(this).removeClass('over');
-                scope.update();
-              });
-            })
-            .on('availability', function(event, available) {
-              $(this)
-                .toggleClass('unavailable', !available)
-                .toggleClass('disabled', !available)
-                .find('input:radio')
-                  .attr('disabled', !available);
-            })
-            .on('resolveAvailabilityConflict', function() {
-              $(this).filter('.active.unavailable').each(function() {
-                $(this)
-                  .siblings().not('.unavailable').first()
-                  .click();
-              });
+              $(this).removeClass('over');
+              scope.update();
             });
         },
 
