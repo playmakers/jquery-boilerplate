@@ -16,9 +16,9 @@
     // Create the defaults once
     var pluginName = "shopifyVisualVariantSelector",
         defaults = {
-          product: null,
-          productPhoto: null,
-          target: null,
+          // product: null,
+          // productPhoto: null,
+          // target: null,
           options: [null, null, null],
         };
 
@@ -37,7 +37,6 @@
         this.defaultVariant = null;
 
         this.images = [];
-        this.optionNames = [];
         this.options = [];
 
         this.init();
@@ -47,46 +46,59 @@
     $.extend(Plugin.prototype, {
         init: function () {
           var scope = this,
-          selector = $(this.element);
+          selector = $(this.element),
+          optionGroupNames = this.settings.optionGroupNames || selector.data("optionGroupNames") || [];
 
-          this.optionNames = selector.data("options");
-
-          $.each(this.settings.options, function(index, value){
-            if (!value) {
-              scope.options[index] = $("<div></div>").insertAfter(selector);
-            } else {
-              scope.options[index] = value;
-            }
+          $.each(optionGroupNames, function(index, optionGroupName) {
+            scope.addOption(optionGroupName);
           });
 
           selector.find("option").each(function(index, elem) {
-            scope.addVariant($(elem).data("infos"));
+            var variant;
+            if (variant = $(elem).data("variant")) {
+
+              scope.addVariant(variant);
+            }
           });
 
-          selector.hide();
+          // selector.hide();
+        },
+
+        addOption: function(optionGroupName) {
+          var scope = this,
+          selector = $(this.element),
+          index = scope.options.length,
+          elem = $("<div></div>");
+
+          scope.options[index] = {
+            buttons: {},
+            group: elem
+          }
+
+          $("<div><span>" + optionGroupName + ":</span></div>").append(elem).insertAfter(selector);
         },
 
         addVariant: function(variant) {
           var key = this.variantKey(variant);
 
-          if (!this.defaultVariant || !this.defaultVariant.available) {
-            this.defaultVariant = variant;
+          if (!this.variants[key]) {
+            this.variants[key] = variant;
+
+            if (!this.defaultVariant || !this.defaultVariant.available) {
+              this.defaultVariant = variant;
+            }
+
+            this.preload(variant.image);
+
+            this.renderOptionButtons(variant.options);
+
+            this.selectVariant(this.defaultVariant);
           }
-          this.preload(variant.image); // TODO only if foto element set
-          this.renderButtons(variant);
-
-          this.variants[key] = variant;
-
-          // $.each(variant.options, function(optionKey, optionValue) {
-          //   $('#options select.' + optionKey).hide();
-          //   option(optionKey, optionValue)
-          //     .click();
-          // });
         },
 
         variantKey: function(variant) {
           var scope = this;
-          return $.map(variant.options, function(optionValue, optionKey) {
+          return $.map(variant.options, function(optionValue) {
             return scope.norm(optionValue);
           }).join("-");
         },
@@ -98,20 +110,25 @@
           }
         },
 
-        renderButtons: function(variant) {
+        renderOptionButtons: function(options) {
           var scope = this;
-          $.each(variant.options, function(optionKey, value) {
-            var optionValue = scope.norm(value);
-            scope.options[optionKey]
-              .filter(function() {
-                return !$(this).find("input[value=" + optionValue + "]")[0];
-              })
-              .append(function() {
-                return scope.renderButton(optionKey, optionValue, value);
-              });
+          $.each(options, function(index, optionValue) {
+            var optionNormValue = scope.norm(optionValue);
+            if (!scope.options[index].buttons[optionNormValue]) {
+              var optionKey = 'group' + index,
+                button = scope.renderButton(optionKey, optionValue, optionValue);
+              scope.options[index].buttons[optionNormValue] = button.appendTo(scope.options[index].group);
+            }
           });
         },
 
+        selectVariant: function(variant) {
+          var scope = this;
+          $.each(variant.options, function(index, optionValue) {
+            var optionNormValue = scope.norm(optionValue);
+            scope.options[index].buttons[optionNormValue].click();
+          });
+        },
 
         // ------------------------------------------  sort me
 
@@ -212,15 +229,15 @@
             .attr('title', optionKey + ': ' + display)
             .append(button, $('<span>' + display + '</span>'))
             .on('click', function(event) {
-              $(this).not('.unavailable').not('.active').each(function() {
-                scope.toggleClassName($(this), 'active')
-                  .find('input:radio')
-                    .prop('checked', true)
-                    .siblings()
-                    .prop('checked', false);
-                scope.update();
-                scope.setAvailabilites();
-              });
+              // $(this).not('.unavailable').not('.active').each(function() {
+                // scope.toggleClassName($(this), 'active')
+                  // .find('input:radio')
+                    // .prop('checked', true)
+                    // .siblings()
+                    // .prop('checked', false);
+                // scope.update();
+                // scope.setAvailabilites();
+              // });
             }).on('mouseover', function() {
               $(this).not('.unavailable').not('.active').each(function() {
                 scope.toggleClassName($(this), 'over');
