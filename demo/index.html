@@ -5,10 +5,21 @@
       <title>jQuery Boilerplate</title>
       <script src="../src/jquery.min.js"></script>
       <script src="../src/jquery.shopifyVisualVariantSelector.js"></script>
+      <style>
+         .active {
+            border: 1px solid red;
+         }
+         .over {
+            border: 1px solid blue;
+         }
+         .unavailable {
+            border: 1px solid gray;
+         }
+      </style>
    </head>
    <body>
       <form action="/cart/add" method="post" enctype="multipart/form-data" id="addToCartForm">
-         <select name="id" id="productSelect" data-option-group-names='["Grösse","Farbe"]'>
+         <select name="id" id="productSelect" data-option-group-names='["Grösse","Farbe"]' size="10">
             <option selected="selected" value="1039544392" data-variant='{"id":1039544392,"title":"S / Rot","options":["S","Rot"],"option1":"S","option2":"Rot","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":0,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-05T18:11:50+01:00","id":1111005856,"position":1,"product_id":388595988,"updated_at":"2014-12-05T18:15:14+01:00","src":"https:http://cdn.shopify.com/s/files/1/0240/1531/products/Xenith_Epic_Seite.jpg?v=1417799714","variant_ids":[1039544392,1039544432,1039544472,1039544512]}}'>S / Rot - €339,85 EUR</option>
             <option value="1039544368" data-variant='{"id":1039544368,"title":"L / Schwarz","options":["L","Schwarz"],"option1":"S","option2":"Schwarz","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":0,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-06T12:26:36+01:00","id":1112118324,"position":5,"product_id":388595988,"updated_at":"2014-12-06T12:26:36+01:00","src":"https:http://cdn.shopify.com/s/files/1/0240/1531/products/Black.jpeg?v=1417865196","variant_ids":[1039544368,1039544408,1039544448,1039544488]}}'>L / Schwarz - €339,85 EUR</option>
             <option value="1039544372" data-variant='{"id":1039544372,"title":"S / Weiß","options":["S","Weiß"],"option1":"S","option2":"Weiß","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":0,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-06T12:26:41+01:00","id":1112118432,"position":12,"product_id":388595988,"updated_at":"2014-12-06T12:26:41+01:00","src":"https:http://cdn.shopify.com/s/files/1/0240/1531/products/White.jpeg?v=1417865201","variant_ids":[1039544372,1039544412,1039544452,1039544492]}}'>S / Weiß - €339,85 EUR</option>
@@ -23,22 +34,23 @@
                   // optionGroupNames: ["Grösse","Farbe"]
                })
                .on('variantChange', function(event, variant){
-                  // console.log(variant);
-                  //update image
-
-                  // update price
+                  if(variant) {
+                     // console.log("unavail");
+                     //update image
+                     // if (variant.image && productPhotoElement) {
+                     //   productPhotoElement.attr("src", variant.image);
+                     // }
+                     // update price
+                     // $("#productPrice").html(variant.price);
+                     // $("#comparePrice").html(variant.comparePrice);
+                  }
 
                   // hide when just one option
 
+                  // productElement.toggleClass("unavailable", variant.quantity < 1 && !variant.available);
+                  // productElement.toggleClass("preorder",    variant.quantity < 1 && variant.available);
+                  // productElement.toggleClass("onsale",     variant.onSale);
 
-            // if (variant.image && productPhotoElement) {
-            //   productPhotoElement.attr("src", variant.image);
-            // }
-            // productElement.toggleClass("unavailable", variant.quantity < 1 && !variant.available);
-            // productElement.toggleClass("preorder",    variant.quantity < 1 && variant.available);
-            // productElement.toggleClass("onsale",     variant.onSale);
-            // $("#productPrice").html(variant.price);
-            // $("#comparePrice").html(variant.comparePrice);
                });
          });
       </script>

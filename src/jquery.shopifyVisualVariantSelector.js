@@ -16,9 +16,6 @@
     // Create the defaults once
     var pluginName = "shopifyVisualVariantSelector",
         defaults = {
-          // product: null,
-          // productPhoto: null,
-          // target: null,
           options: [null, null, null],
         };
 
@@ -97,6 +94,7 @@
 
         variantKey: function(variant) {
           var scope = this;
+
           return $.map(variant.options, function(optionValue) {
             return scope.norm(optionValue);
           }).join("-");
@@ -111,6 +109,7 @@
 
         renderOptionButtons: function(options) {
           var scope = this;
+
           $.each(options, function(index, optionValue) {
             var optionNormValue = scope.norm(optionValue);
             if (!scope.options[index].buttons[optionNormValue]) {
@@ -123,9 +122,10 @@
 
         selectVariant: function(variant) {
           var scope = this;
+
           $.each(variant.options, function(index, optionValue) {
             var optionNormValue = scope.norm(optionValue);
-            scope.options[index].buttons[optionNormValue].click();
+            scope.options[index].buttons[optionNormValue].find('input').click();
           });
         },
 
@@ -149,42 +149,46 @@
 
         option: function(optionKey, optionValue) {
           var scope = this;
+
           return $('#options .' + optionKey + ' .option').filter(function() {
             return $(this).find('input[value=' + scope.norm(optionValue) + ']')[0];
           });
         },
 
-
         currentVariantKey: function() {
           var scope = this;
 
           return $.map(scope.options, function(values, index) {
-
-  // currentOptionValue: function(optionKey) {
-  //         var elements = $('#options .' + optionKey + ' .option'),
-  //         element = elements.filter('.over')[0] || elements.filter('.active')[0];
-
-  //         return $(element).find('input').val();
-  //       },
-
-
-            return values.group.find(':checked').val();
+            var element = values.group.find('.over')[0] || values.group.find('.active')[0];
+            return $(element).find('input').val();
           }).join('-');
         },
 
         update: function() {
-          var selector = $(this.element),
-          key = this.currentVariantKey(),
-          variant = this.variants[key];
+          var scope = this,
+            selector = $(this.element),
+            key = this.currentVariantKey(),
+            variant = this.variants[key];
+
           if (variant) {
             selector.val(variant.id);
           }
+          scope.setAvailabilites();
           selector.trigger('variantChange', variant);
+        },
+
+        setAvailabilites: function() {
+          // var scope = this,
+          //   possibleVariants = this.values(variants);
+
+          // $.each(scope.optionKeys(), function(index, optionKey) {
+          //   possibleVariants = scope.setAvailability(optionKey, possibleVariants);
+          // });
         },
 
         setAvailability: function(optionKey, possibleVariants) {
           var elements = $('#options .' + optionKey + ' .option'),
-          sibblingVariants = [];
+            sibblingVariants = [];
 
           elements.trigger('availability', false);
           sibblingVariants = $.grep(possibleVariants, function(variant) {
@@ -196,50 +200,41 @@
           return sibblingVariants;
         },
 
-        setAvailabilites: function() {
-          var scope = this,
-          possibleVariants = this.values(variants);
-
-          $.each(scope.optionKeys(), function(index, optionKey) {
-            possibleVariants = scope.setAvailability(optionKey, possibleVariants);
-          });
-        },
-
-        toggleClassName: function(node, className) {
-          return node.addClass(className).siblings().removeClass(className).end();
-        },
 
         renderButton: function(optionKey, optionValue, display) {
           var scope = this,
-          button = $('<input type="radio" name="' + optionKey + '" value="' + optionValue +'">')
-            .on('click', function(event) {
-              // console.log('inputclick');
-              scope.toggleClassName($(this).parent(), 'active');
-              scope.update();
-              event.stopPropagation();
-              // $(this).not('.unavailable').not('.active').each(function() {
-              //   scope.toggleClassName($(this), 'active')
+            toggleClassName = function(node, className) {
+              return node.addClass(className).siblings().removeClass(className).end();
+            },
+            button = $('<input type="radio" name="' + optionKey + '" value="' + optionValue +'">')
+              .on('click', function(event) {
+                // console.log('inputclick');
+                toggleClassName($(this).parent(), 'active');
+                scope.update();
+                event.stopPropagation();
+                // $(this).not('.unavailable').not('.active').each(function() {
+                //   scope.toggleClassName($(this), 'active')
+                //     .find('input:radio')
+                //       .prop('checked', true)
+                //       .siblings()
+                //       .prop('checked', false);
+                //   scope.setAvailabilites();
+                // });
+              })
+              // .on('availability', function(event, available) {
+              //   $(this)
+              //     .toggleClass('unavailable', !available)
+              //     .toggleClass('disabled', !available)
               //     .find('input:radio')
-              //       .prop('checked', true)
-              //       .siblings()
-              //       .prop('checked', false);
-              //   scope.setAvailabilites();
+              //       .attr('disabled', !available);
+              // })
+              // .on('resolveAvailabilityConflict', function() {
+              //   $(this).filter('.active.unavailable').each(function() {
+              //     $(this)
+              //       .siblings().not('.unavailable').first()
+              //       .click();
+              //   });
               // });
-            })
-            // .on('availability', function(event, available) {
-            //   $(this)
-            //     .toggleClass('unavailable', !available)
-            //     .toggleClass('disabled', !available)
-            //     .find('input:radio')
-            //       .attr('disabled', !available);
-            // })
-            // .on('resolveAvailabilityConflict', function() {
-            //   $(this).filter('.active.unavailable').each(function() {
-            //     $(this)
-            //       .siblings().not('.unavailable').first()
-            //       .click();
-            //   });
-            // });
 
           return $('<label class="btn--secondary option optionValue' + optionValue + '">')
             .attr('title', optionKey + ': ' + display)
@@ -248,11 +243,11 @@
               // console.log('labelclick');
                // scope.update();
                // event.stopPropagation();
-               //               event.stopImmediatePropagation();
+               // event.stopImmediatePropagation();
 
             })
             .on('mouseover', function() {
-              scope.toggleClassName($(this), 'over');
+              toggleClassName($(this), 'over');
               scope.update();
             }).on('mouseout', function() {
               $(this).removeClass('over');
