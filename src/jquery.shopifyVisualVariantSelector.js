@@ -71,53 +71,32 @@
             group: elem
           }
 
-          $("<div><span>" + optionGroupName + ":</span></div>").append(elem).insertAfter(selector);
+          $("<div><span>" + optionGroupName + ":</span></div>").append(elem).insertBefore(selector);
+          // .hide();;
         },
 
         addVariant: function(variant) {
-          var key = this.variantKey(variant);
+          var preloadImage = function(url) {
+              if (url && !this.images[url]) {
+                this.images[url] = new Image();
+                this.images[url].src = url;
+              }
+            },
+            variantKey = $.map(variant.options, this.norm).join("-");
 
-          if (!this.variants[key]) {
-            this.variants[key] = variant;
+          if (!this.variants[variantKey]) {
+            this.variants[variantKey] = variant;
 
             if (!this.defaultVariant || !this.defaultVariant.available) {
               this.defaultVariant = variant;
             }
 
-            this.preload(variant.image);
+            preloadImage(variant.image);
 
             this.renderOptionButtons(variant.options);
 
             this.selectVariant(this.defaultVariant);
           }
-        },
-
-        variantKey: function(variant) {
-          var scope = this;
-
-          return $.map(variant.options, function(optionValue) {
-            return scope.norm(optionValue);
-          }).join("-");
-        },
-
-        preload: function(url) {
-          if (url && !this.images[url]) {
-            this.images[url] = new Image();
-            this.images[url].src = url;
-          }
-        },
-
-        renderOptionButtons: function(options) {
-          var scope = this;
-
-          $.each(options, function(index, optionValue) {
-            var optionNormValue = scope.norm(optionValue);
-            if (!scope.options[index].buttons[optionNormValue]) {
-              var optionKey = 'group' + index,
-                button = scope.renderButton(optionKey, optionNormValue, optionValue);
-              scope.options[index].buttons[optionNormValue] = button.appendTo(scope.options[index].group);
-            }
-          });
         },
 
         selectVariant: function(variant) {
@@ -129,37 +108,33 @@
           });
         },
 
-        // ------------------------------------------  sort me
+        optionKey: function(optionIndex) {
+          return 'group' + optionIndex;
+        },
 
-        values: function(hash) {
-          return $.map(hash, function(value, key) {
-            return value;
+        renderOptionButtons: function(variantOptions) {
+          var scope = this;
+
+          $.each(variantOptions, function(optionIndex, optionValue) {
+            var optionNormValue = scope.norm(optionValue),
+              optionGroup = scope.options[optionIndex];
+
+            if (!optionGroup.buttons[optionNormValue]) {
+              var button = scope.renderButton(optionIndex, optionNormValue, optionValue);
+              optionGroup.buttons[optionNormValue] = button.appendTo(optionGroup.group);
+            }
           });
         },
+
+        // ------------------------------------------  sort me
 
         norm: function(value) {
           return value.replace(/[ .\/]/g, "").replace(/ß/, "s").replace(/ü/, "u");
         },
 
-        optionKeys: function() {
-          return $("#options div").map(function() {
-            return $(this).first().find('input').attr('name');
-          });
-        },
-
-        option: function(optionKey, optionValue) {
-          var scope = this;
-
-          return $('#options .' + optionKey + ' .option').filter(function() {
-            return $(this).find('input[value=' + scope.norm(optionValue) + ']')[0];
-          });
-        },
-
         currentVariantKey: function() {
-          var scope = this;
-
-          return $.map(scope.options, function(values, index) {
-            var element = values.group.find('.over')[0] || values.group.find('.active')[0];
+          return $.map(this.options, function(optionGroup) {
+            var element = optionGroup.group.find('.over')[0] || optionGroup.group.find('.active')[0];
             return $(element).find('input').val();
           }).join('-');
         },
@@ -178,34 +153,46 @@
         },
 
         setAvailabilites: function() {
-          // var scope = this,
-          //   possibleVariants = this.values(variants);
+          var scope = this,
+            values = function(hash) {
+              return $.map(hash, function(value, key) {
+                return value;
+              });
+            },
+            setAvailability = function(optionIndex, optionGroupButtons, possibleVariants) {
+              var sibblingVariants = [];
 
-          // $.each(scope.optionKeys(), function(index, optionKey) {
-          //   possibleVariants = scope.setAvailability(optionKey, possibleVariants);
-          // });
-        },
+              $.each(optionGroupButtons, function(optionNormValue, button) {
+                button.trigger('availability', false);
+              })
+              sibblingVariants = $.grep(possibleVariants, function(variant) {
+                var optionValue = variant.options[optionIndex],
+                  optionNormValue = scope.norm(optionValue);
 
-        setAvailability: function(optionKey, possibleVariants) {
-          var elements = $('#options .' + optionKey + ' .option'),
-            sibblingVariants = [];
+                return $(optionGroupButtons[optionNormValue])
+                  .trigger('availability', variant.available)
+                  .hasClass('active');
+              });
 
-          elements.trigger('availability', false);
-          sibblingVariants = $.grep(possibleVariants, function(variant) {
-            return option(optionKey, variant.options[optionKey])
-              .trigger('availability', variant.available)
-              .hasClass('active');
+              $.each(optionGroupButtons, function(optionNormValue, button) {
+                button.trigger('resolveAvailabilityConflict');
+              })
+
+              return sibblingVariants;
+            },
+            possibleVariants = values(this.variants);
+
+          $.each(scope.options, function(optionIndex, optionGroup) {
+            possibleVariants = setAvailability(optionIndex, optionGroup.buttons, possibleVariants);
           });
-          elements.trigger('resolveAvailabilityConflict');
-          return sibblingVariants;
         },
 
-
-        renderButton: function(optionKey, optionValue, display) {
+        renderButton: function(optionIndex, optionValue, display) {
           var scope = this,
             toggleClassName = function(node, className) {
               return node.addClass(className).siblings().removeClass(className).end();
             },
+            optionKey = scope.optionKey(optionIndex),
             button = $('<input type="radio" name="' + optionKey + '" value="' + optionValue +'">')
               .on('click', function(event) {
                 // console.log('inputclick');
@@ -221,20 +208,6 @@
                 //   scope.setAvailabilites();
                 // });
               })
-              // .on('availability', function(event, available) {
-              //   $(this)
-              //     .toggleClass('unavailable', !available)
-              //     .toggleClass('disabled', !available)
-              //     .find('input:radio')
-              //       .attr('disabled', !available);
-              // })
-              // .on('resolveAvailabilityConflict', function() {
-              //   $(this).filter('.active.unavailable').each(function() {
-              //     $(this)
-              //       .siblings().not('.unavailable').first()
-              //       .click();
-              //   });
-              // });
 
           return $('<label class="btn--secondary option optionValue' + optionValue + '">')
             .attr('title', optionKey + ': ' + display)
@@ -252,6 +225,22 @@
             }).on('mouseout', function() {
               $(this).removeClass('over');
               scope.update();
+            })
+            .on('availability', function(event, available) {
+              $(this)
+                .toggleClass('unavailable', !available)
+                .find('input:radio')
+                  .attr('disabled', !available);
+            })
+            .on('resolveAvailabilityConflict', function() {
+              $(this).filter('.active.unavailable').each(function() {
+                $(this)
+                  .siblings()
+                  .not('.unavailable')
+                  .first()
+                  .find("input")
+                  .click();
+              });
             });
         },
 
