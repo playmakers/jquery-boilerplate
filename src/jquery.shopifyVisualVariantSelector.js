@@ -16,7 +16,10 @@
     // Create the defaults once
     var pluginName = "shopifyVisualVariantSelector",
         defaults = {
-          options: [null, null, null],
+          options: [null, null, null], //shopify allows max 3 options
+          hideSingleOptionsFromLevel: 0,
+          resolveAvailabilityConflict: true,
+          selectUnavailable: false
         };
 
     // The actual plugin constructor
@@ -35,6 +38,17 @@
 
         this.images = [];
         this.options = [];
+
+        this.const = {
+          undefined: 'undefined',
+          selected: 'selected',
+          unavailable: 'unavailable',
+          over: 'over',
+          keySeparator: '-',
+          undefinedVariant: {
+            id: 'undefined'
+          }
+        }
 
         this.init();
     }
@@ -56,6 +70,9 @@
               scope.addVariant(variant);
             }
           });
+          $("<option>")
+            .text(scope.const.undefined)
+            .appendTo(selector);
 
           // selector.hide();
         },
@@ -63,16 +80,21 @@
         addOption: function(optionGroupName) {
           var scope = this,
           selector = $(this.element),
-          index = scope.options.length,
-          elem = $("<div></div>");
+          optionIndex = scope.options.length,
+          elem = $('<div>'),
+          optionGroup = $('<div>')
+            .append( $('<span>').text(optionGroupName + ':') )
+            .append(elem)
+            .insertBefore(selector);
 
-          scope.options[index] = {
+          scope.options[optionIndex] = {
             buttons: {},
-            group: elem
+            all: elem
           }
 
-          $("<div><span>" + optionGroupName + ":</span></div>").append(elem).insertBefore(selector);
-          // .hide();;
+          if (this.settings.hideSingleOptionsFromLevel && optionIndex + 1 >= this.settings.hideSingleOptionsFromLevel) {
+            optionGroup.hide();
+          }
         },
 
         addVariant: function(variant) {
@@ -82,7 +104,13 @@
                 this.images[url].src = url;
               }
             },
-            variantKey = $.map(variant.options, this.norm).join("-");
+            variantKey = $.map(variant.options, this.norm).join(this.const.keySeparator);
+
+          $.extend(variant, {
+            onSale:      (variant.compare_at_price !== null && variant.price < variant.compare_at_price),
+            soldOut:     (variant.inventory_quantity < 1 && variant.available),
+            unavailable: (variant.inventory_quantity < 1 && !variant.available)
+          })
 
           if (!this.variants[variantKey]) {
             this.variants[variantKey] = variant;
@@ -102,9 +130,9 @@
         selectVariant: function(variant) {
           var scope = this;
 
-          $.each(variant.options, function(index, optionValue) {
+          $.each(variant.options, function(optionIndex, optionValue) {
             var optionNormValue = scope.norm(optionValue);
-            scope.options[index].buttons[optionNormValue].find('input').click();
+            scope.options[optionIndex].buttons[optionNormValue].find('input').click();
           });
         },
 
@@ -120,35 +148,44 @@
               optionGroup = scope.options[optionIndex];
 
             if (!optionGroup.buttons[optionNormValue]) {
-              var button = scope.renderButton(optionIndex, optionNormValue, optionValue);
-              optionGroup.buttons[optionNormValue] = button.appendTo(optionGroup.group);
+              var button = scope.renderButton(optionIndex, optionValue);
+              optionGroup.buttons[optionNormValue] = button.appendTo(optionGroup.all);
+
+              if (optionGroup.all.find('label').length > 1) {
+                optionGroup.all.parent().show();
+              }
             }
           });
         },
 
-        // ------------------------------------------  sort me
-
         norm: function(value) {
-          return value.replace(/[ .\/]/g, "").replace(/ß/, "s").replace(/ü/, "u");
+          return value
+            .replace(/[ .\/]/g, "")
+            .replace(/ß/g, "ss")
+            .replace(/ä/g, "ae")
+            .replace(/ö/g, "oe")
+            .replace(/ü/g, "ue")
         },
 
         currentVariantKey: function() {
+          var scope = this;
+
           return $.map(this.options, function(optionGroup) {
-            var element = optionGroup.group.find('.over')[0] || optionGroup.group.find('.active')[0];
+            var element = optionGroup.all.find('.' + scope.const.over)[0] || optionGroup.all.find('.' + scope.const.selected)[0];
+
             return $(element).find('input').val();
-          }).join('-');
+          }).join(scope.const.keySeparator);
         },
 
-        update: function() {
-          var scope = this,
-            selector = $(this.element),
+        updateSelection: function() {
+          var selector = $(this.element),
             key = this.currentVariantKey(),
-            variant = this.variants[key];
+            variant = this.variants[key] || this.const.undefinedVariant;
 
-          if (variant) {
-            selector.val(variant.id);
-          }
-          scope.setAvailabilites();
+          selector.val(variant.id);
+
+          this.setAvailabilites();
+
           selector.trigger('variantChange', variant);
         },
 
@@ -171,12 +208,14 @@
 
                 return $(optionGroupButtons[optionNormValue])
                   .trigger('availability', variant.available)
-                  .hasClass('active');
+                  .hasClass(scope.const.selected);
               });
 
-              $.each(optionGroupButtons, function(optionNormValue, button) {
-                button.trigger('resolveAvailabilityConflict');
-              })
+              if (scope.settings.resolveAvailabilityConflict) {
+                $.each(optionGroupButtons, function(optionNormValue, button) {
+                  button.trigger('resolveAvailabilityConflict');
+                })
+              }
 
               return sibblingVariants;
             },
@@ -187,63 +226,59 @@
           });
         },
 
-        renderButton: function(optionIndex, optionValue, display) {
+        renderButton: function(optionIndex, optionValue) {
           var scope = this,
             toggleClassName = function(node, className) {
               return node.addClass(className).siblings().removeClass(className).end();
             },
             optionKey = scope.optionKey(optionIndex),
-            button = $('<input type="radio" name="' + optionKey + '" value="' + optionValue +'">')
+            optionNormValue = scope.norm(optionValue),
+            button = $('<input>')
+              .attr('type', 'radio')
+              .attr('name', optionKey)
+              .attr('value', optionNormValue)
               .on('click', function(event) {
-                // console.log('inputclick');
-                toggleClassName($(this).parent(), 'active');
-                scope.update();
+                toggleClassName($(this).parent(), scope.const.selected);
+                scope.updateSelection();
                 event.stopPropagation();
-                // $(this).not('.unavailable').not('.active').each(function() {
-                //   scope.toggleClassName($(this), 'active')
-                //     .find('input:radio')
-                //       .prop('checked', true)
-                //       .siblings()
-                //       .prop('checked', false);
-                //   scope.setAvailabilites();
-                // });
               })
 
-          return $('<label class="btn--secondary option optionValue' + optionValue + '">')
-            .attr('title', optionKey + ': ' + display)
-            .append(button, $('<span>' + display + '</span>'))
+          return $('<label>')
+            .addClass('optionValue' + optionNormValue)
+            .attr('title', optionKey + ': ' + optionValue)
+            .append(button, $('<span>').text(optionValue))
             .on('click', function(event) {
-              // console.log('labelclick');
-               // scope.update();
-               // event.stopPropagation();
-               // event.stopImmediatePropagation();
-
+              // console.log(event);
             })
             .on('mouseover', function() {
-              toggleClassName($(this), 'over');
-              scope.update();
+              toggleClassName($(this), scope.const.over);
+              scope.updateSelection();
             }).on('mouseout', function() {
-              $(this).removeClass('over');
-              scope.update();
+              $(this)
+                .removeClass(scope.const.over);
+              scope.updateSelection();
             })
             .on('availability', function(event, available) {
               $(this)
-                .toggleClass('unavailable', !available)
-                .find('input:radio')
+                .toggleClass(scope.const.unavailable, !available);
+
+              if (!scope.settings.selectUnavailable) {
+                $(this)
+                  .find('input:radio')
                   .attr('disabled', !available);
+              }
             })
             .on('resolveAvailabilityConflict', function() {
-              $(this).filter('.active.unavailable').each(function() {
+              $(this).filter('.' + scope.const.selected + '.' + scope.const.unavailable).each(function() {
                 $(this)
                   .siblings()
-                  .not('.unavailable')
+                  .not('.' + scope.const.unavailable)
                   .first()
-                  .find("input")
+                  .find('input')
                   .click();
               });
             });
         },
-
 
     });
 
