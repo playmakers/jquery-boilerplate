@@ -28,7 +28,7 @@
       .shopifyVisualVariantSelector({
         hideSingleOptionsFromLevel: false,
         resolveAvailabilityConflict: false,
-        selectUnavailable: false
+        selectSoldOut: false
 	     })
 	     .on('variantChange', function(event, variant){
 	     	  // do something with selected variant

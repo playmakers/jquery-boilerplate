@@ -19,7 +19,7 @@
           options: [null, null, null], //shopify allows max 3 options
           hideSingleOptionsFromLevel: 0,
           resolveAvailabilityConflict: true,
-          selectUnavailable: false
+          selectSoldOut: false
         };
 
     // The actual plugin constructor
@@ -42,6 +42,7 @@
         this.const = {
           undefined: 'undefined',
           selected: 'selected',
+          soldout: 'soldout',
           unavailable: 'unavailable',
           over: 'over',
           keySeparator: '-',
@@ -83,7 +84,8 @@
           optionIndex = scope.options.length,
           elem = $('<div>'),
           optionGroup = $('<div>')
-            .append( $('<span>').text(optionGroupName + ':') )
+            .addClass('option' + scope.norm(optionGroupName))
+            .append( $('<span>').text(optionGroupName) )
             .append(elem)
             .insertBefore(selector);
 
@@ -98,10 +100,11 @@
         },
 
         addVariant: function(variant) {
-          var preloadImage = function(url) {
-              if (url && !this.images[url]) {
-                this.images[url] = new Image();
-                this.images[url].src = url;
+          var scope = this,
+            preloadImage = function(url) {
+              if (url && !scope.images[url]) {
+                scope.images[url] = new Image();
+                scope.images[url].src = url;
               }
             },
             variantKey = $.map(variant.options, this.norm).join(this.const.keySeparator);
@@ -115,15 +118,14 @@
           if (!this.variants[variantKey]) {
             this.variants[variantKey] = variant;
 
-            if (!this.defaultVariant || !this.defaultVariant.available) {
-              this.defaultVariant = variant;
-            }
-
             preloadImage(variant.image);
 
             this.renderOptionButtons(variant.options);
 
-            this.selectVariant(this.defaultVariant);
+            if (!this.defaultVariant || !this.defaultVariant.available) {
+              this.defaultVariant = variant;
+              this.selectVariant(this.defaultVariant);
+            }
           }
         },
 
@@ -200,15 +202,20 @@
               var sibblingVariants = [];
 
               $.each(optionGroupButtons, function(optionNormValue, button) {
-                button.trigger('availability', false);
+                button
+                  .trigger('availability', false)
+                  .trigger('soldout', true);
               })
               sibblingVariants = $.grep(possibleVariants, function(variant) {
-                var optionValue = variant.options[optionIndex],
-                  optionNormValue = scope.norm(optionValue);
+                var optionNormValue = scope.norm(variant.options[optionIndex]);
 
-                return $(optionGroupButtons[optionNormValue])
-                  .trigger('availability', variant.available)
-                  .hasClass(scope.const.selected);
+                if(variant.available) {
+                  optionGroupButtons[optionNormValue].trigger('availability', true);
+                }
+                if(!variant.soldOut) {
+                  optionGroupButtons[optionNormValue].trigger('soldout', false);
+                }
+                return optionGroupButtons[optionNormValue].hasClass(scope.const.selected);
               });
 
               if (scope.settings.resolveAvailabilityConflict) {
@@ -258,15 +265,17 @@
                 .removeClass(scope.const.over);
               scope.updateSelection();
             })
+            .on('soldout', function(event, soldout) {
+              $(this)
+                .toggleClass(scope.const.soldout, soldout)
+                .find('input:radio')
+                  .attr('disabled', !scope.settings.selectSoldOut && soldout);
+            })
             .on('availability', function(event, available) {
               $(this)
-                .toggleClass(scope.const.unavailable, !available);
-
-              if (!scope.settings.selectUnavailable) {
-                $(this)
-                  .find('input:radio')
+                .toggleClass(scope.const.unavailable, !available)
+                .find('input:radio')
                   .attr('disabled', !available);
-              }
             })
             .on('resolveAvailabilityConflict', function() {
               $(this).filter('.' + scope.const.selected + '.' + scope.const.unavailable).each(function() {
