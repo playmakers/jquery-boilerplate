@@ -1,18 +1,89 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>jQuery Boilerplate</title>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
-		<script src="../src/jquery.boilerplate.js"></script>
-	</head>
-	<body>
-		<div id="element"></div>
-		<script>
-			$(function() {
-				$("#element").defaultPluginName({
-					propertyName: "a custom value"
-				});
-			});
-		</script>
-	</body>
+   <head>
+      <meta charset="UTF-8">
+      <title>shopifyVisualVariantSelector</title>
+      <script src="../src/jquery.min.js"></script>
+      <script src="../src/jquery.shopifyVisualVariantSelector.js"></script>
+      <style>
+         form .unavailable {
+            border: 1px solid gray;
+         }
+         form .selected {
+            border: 1px solid red;
+         }
+         form .over {
+            border: 1px solid blue;
+         }
+
+         #product {
+            display: block;
+            margin: 10px;
+         }
+
+         #product.onsale {
+            border: 2px solid yellow;
+         }
+
+         #product.soldout {
+            background-color: #9CC;
+         }
+
+         #product.unavailable {
+            background-color: #CCC;
+         }
+
+
+         select {
+            margin: 10px;
+         }
+      </style>
+   </head>
+   <body>
+      <div id="product">Product</div>
+
+      <form action="/cart/add" method="post" enctype="multipart/form-data" id="addToCartForm">
+         <select name="id" id="productSelect" data-option-group-names='["Grösse","Farbe", "material"]' size="10">
+            <option selected="selected" value="1039544392" data-variant='{"id":1039544392,"title":"S / Rot","options":["S","Rot","Jeans"],"option1":"S","option2":"Rot","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":0,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-05T18:11:50+01:00","id":1111005856,"position":1,"product_id":388595988,"updated_at":"2014-12-05T18:15:14+01:00","src":"https:http://cdn.shopify.com/s/files/1/0240/1531/products/Xenith_Epic_Seite.jpg?v=1417799714","variant_ids":[1039544392,1039544432,1039544472,1039544512]}}'>S / Rot - €339,85 EUR</option>
+            <option value="1039544368" data-variant='{"id":1039544368,"title":"L / Schwarz","options":["L","Schwarz","Jeans"],"option1":"S","option2":"Schwarz","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":0,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-06T12:26:36+01:00","id":1112118324,"position":5,"product_id":388595988,"updated_at":"2014-12-06T12:26:36+01:00","src":"https:http://cdn.shopify.com/s/files/1/0240/1531/products/Black.jpeg?v=1417865196","variant_ids":[1039544368,1039544408,1039544448,1039544488]}}'>L / Schwarz - €339,85 EUR</option>
+            <option value="1039544372" data-variant='{"id":1039544372,"title":"S / Weiß","options":["S","Weiß","Jeans"],"option1":"S","option2":"Weiß","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":2,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-06T12:26:41+01:00","id":1112118432,"position":12,"product_id":388595988,"updated_at":"2014-12-06T12:26:41+01:00","src":"https:http://cdn.shopify.com/s/files/1/0240/1531/products/White.jpeg?v=1417865201","variant_ids":[1039544372,1039544412,1039544452,1039544492]}}'>S / Weiß - €339,85 EUR</option>
+            <option value="1039544322" data-variant='{"id":1039544372,"title":"S / Weiß","options":["S","Grün","Jeans"],"option1":"S","option2":"Weiß","option3":null,"price":33985,"weight":0,"compare_at_price":null,"inventory_quantity":10,"inventory_management":"shopify","inventory_policy":"continue","available":true,"sku":"","requires_shipping":true,"taxable":true,"barcode":"","featured_image":{"created_at":"2014-12-06T12:26:41+01:00","id":1112118432,"position":12,"product_id":388595988,"updated_at":"2014-12-06T12:26:41+01:00","src":"https:http://cdn.shopify.com/s/files/1/0240/1531/products/White.jpeg?v=1417865201","variant_ids":[1039544372,1039544412,1039544452,1039544492]}}'>S / Weiß - €339,85 EUR</option>
+         </select>
+         <button type="submit" name="add" id="addToCart" class="btn">Einkaufswagen</button>
+      </form>
+
+      <script>
+         $(function() {
+         	var visualSelector = $("#productSelect")
+               .shopifyVisualVariantSelector({
+                  hideSingleOptionsFromLevel: false,
+                  resolveAvailabilityConflict: false,
+                  selectUnavailable: false
+                  // optionGroupNames: ["Grösse","Farbe"]
+               })
+               .on('variantChange', function(event, variant){
+                  var productElement = $("#product");
+
+                  productElement.toggleClass("undefined", variant.id == 'undefined');
+
+                  if (variant.id != 'undefined') {
+                     //update product state
+                     productElement
+                        .toggleClass("unavailable", variant.unavailable)
+                        .toggleClass("soldout",     variant.soldOut)
+                        .toggleClass("onsale",      variant.onSale);
+
+                     //update image
+                     if (variant.image ) {
+                       $("#product img").attr("src", variant.image);
+                     }
+
+                     // update price
+                     // $("#productPrice").html(variant.price);
+                     // $("#comparePrice").html(variant.compare_at_price);
+                  }
+               });
+         });
+      </script>
+   </body>
 </html>
