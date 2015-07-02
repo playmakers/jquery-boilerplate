@@ -1,3 +1,11 @@
+/*
+ *  jquery-shopifyVisualVariantSelector - v1.0.0
+ *  Autogenerate nice visual variant selectors for shopify shops
+ *  http://www.playmakers-football.de
+ *
+ *  Made by Tobias Bielohlawek
+ *  Under MIT License
+ */
 // the semi-colon before function invocation is a safety net against concatenated
 // scripts and/or other plugins which may not be closed properly.
 ;(function ( $, window, document, undefined ) {

@@ -1,18 +1,19 @@
 {
-	"name": "jquery-boilerplate",
-	"version": "3.5.0",
-	"homepage": "http://jqueryboilerplate.com",
+	"name": "jquery-shopifyVisualVariantSelector",
+	"version": "1.0.0",
+	"homepage": "http://www.playmakers-football.com",
 	"authors": [
-		"Zeno Rocha <hi@zenorocha.com>"
+		"Tobias Bielohlawek <tobi@rngtng.com>"
 	],
-	"description": "A jump-start for jQuery plugins development.",
-	"main": "src/jquery.boilerplate.js",
+	"description": "Autogenerate nice visual variant selectors for shopify shops.",
+	"main": "src/jquery.shopifyVisualVariantSelector.js",
 	"keywords": [
-		"jquery",
-		"plugin",
-		"boilerplate",
 		"jquery-plugin",
-		"jquery-boilerplate"
+		"jquery",
+		"shopify",
+		"option",
+		"variant",
+		"selector"
 	],
 	"license": "MIT"
 }

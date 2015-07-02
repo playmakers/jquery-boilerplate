@@ -23,14 +23,14 @@ module.exports = function(grunt) {
 				banner: "<%= meta.banner %>"
 			},
 			dist: {
-				src: ["src/jquery.boilerplate.js"],
-				dest: "dist/jquery.boilerplate.js"
+				src: ["src/jquery.shopifyVisualVariantSelector.js"],
+				dest: "dist/jquery.shopifyVisualVariantSelector.js"
 			}
 		},
 
 		// Lint definitions
 		jshint: {
-			files: ["src/jquery.boilerplate.js"],
+			files: ["src/jquery.shopifyVisualVariantSelector.js"],
 			options: {
 				jshintrc: ".jshintrc"
 			}
@@ -39,8 +39,8 @@ module.exports = function(grunt) {
 		// Minify definitions
 		uglify: {
 			my_target: {
-				src: ["dist/jquery.boilerplate.js"],
-				dest: "dist/jquery.boilerplate.min.js"
+				src: ["dist/jquery.shopifyVisualVariantSelector.js"],
+				dest: "dist/jquery.shopifyVisualVariantSelector.min.js"
 			},
 			options: {
 				banner: "<%= meta.banner %>"
@@ -51,7 +51,7 @@ module.exports = function(grunt) {
 		coffee: {
 			compile: {
 				files: {
-					"dist/jquery.boilerplate.js": "src/jquery.boilerplate.coffee"
+					"dist/jquery.shopifyVisualVariantSelector.js": "src/jquery.shopifyVisualVariantSelector.coffee"
 				}
 			}
 		},

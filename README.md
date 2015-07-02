@@ -18,7 +18,7 @@
 2. Include plugin's code:
 
 	```html
-	<script src="dist/jquery.boilerplate.min.js"></script>
+	<script src="dist/jquery.shopifyVisualVariantSelector.min.js"></script>
 	```
 
 3. Call the plugin:
